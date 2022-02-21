@@ -1,0 +1,24 @@
+{
+    "canisters": {
+      "token": {
+        "build": "./build.sh",
+        "candid": "giga721/giga721.did",
+        "wasm": "target/wasm32-unknown-unknown/release/giga721.wasm",
+        "type": "custom"
+      }
+    },
+    "dfx": "0.8.4",
+    "networks": {
+      "ic": {
+        "providers": [
+          "https://boundary.ic0.app/"
+        ],
+        "type": "persistent"
+      },
+      "local": {
+        "bind": "127.0.0.1:8000",
+        "type": "ephemeral"
+      }
+    },
+    "version": 1
+  }
