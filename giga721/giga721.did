@@ -107,6 +107,16 @@ record {
    Ok: null;
  };
 
+ type Operation = 
+ variant {
+   delist;
+   init;
+   list;
+   mint;
+   purchase;
+   transfer;
+ };
+
  type OpRecord = 
  record {
    caller: principal;
@@ -124,7 +134,7 @@ record {
    highest_sell: nat64;
    volume_traded: nat64;
    owners: nat64;
-   listings: u64;
+   listings: nat64;
  };
 
 service : (text, text, text, nat, principal) -> {
