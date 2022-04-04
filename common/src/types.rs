@@ -1,6 +1,6 @@
+use crate::rc_bytes::RcBytes;
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
-use std::borrow::Cow;
-use serde_bytes::{ByteBuf, Bytes};
+use serde_bytes::{ByteBuf};
 use serde::Serialize;
 
 pub type HeaderField = (String, String);
@@ -17,7 +17,7 @@ pub struct HttpRequest {
 pub struct HttpResponse {
     pub status_code: u16,
     pub headers: Vec<HeaderField>,
-    pub body: Cow<'static, Bytes>,
+    pub body: RcBytes,
 }
 
 #[derive(Clone, CandidType, Deserialize, Serialize)]
@@ -45,6 +45,7 @@ pub enum Operation {
     init,
     list,
     mint,
+    burn,
     purchase,
     transfer
 }

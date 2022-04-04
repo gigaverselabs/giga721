@@ -5,34 +5,18 @@ use crate::storage::Asset;
 
 use ic_cdk::{caller};
 use ic_cdk_macros::{update};
+use ic_cdk::export::candid::{Principal};
 
 use crate::guards::{owner_guard};
-// use crate::state::get_state;
-
-
-
 
 #[update(guard="owner_guard")]
-async fn mint() -> Result<u32, String> {
-    // let state = get_state();
-
-    STATE.with(|x| x.borrow_mut().mint(caller()))
-
-    // match state.mint(data, caller()).await {
-    //     Ok(id) => return id,
-    //     Err(s) => trap(&s),
-    // }
+fn mint_for(token_id: u128, owner: Principal) -> Result<u64, String> {
+    STATE.with(|x| x.borrow_mut().mint_token_id(caller(), owner, token_id as u32))
 }
-#[update(guard="owner_guard")]
-async fn mint_id(token_id: u32) -> Result<u32, String> {
-    // let state = get_state();
 
-    STATE.with(|x| x.borrow_mut().mint(caller()))
-
-    // match state.mint(data, caller()).await {
-    //     Ok(id) => return id,
-    //     Err(s) => trap(&s),
-    // }
+#[update]
+fn burn(token_id: u128) -> Result<u64, String> {
+    STATE.with(|x| x.borrow_mut().burn(caller(), token_id as u32))
 }
 
 // #[update(guard="owner_guard")]
@@ -56,7 +40,7 @@ async fn mint_id(token_id: u32) -> Result<u32, String> {
 // }
 
 #[update(guard="owner_guard")]
-async fn upload_asset(data: Asset) -> Result<(), String> {
+fn upload_asset(data: Asset) -> Result<(), String> {
     STORAGE.with(|x| {
         x.borrow_mut().store_asset(&data)
     })
@@ -64,8 +48,10 @@ async fn upload_asset(data: Asset) -> Result<(), String> {
 
 //Uploads metadata of given token
 #[update(guard="owner_guard")]
-async fn upload_tokens_metadata(_data: Vec<Token>) -> Result<(), String> {
-    
-    
+fn upload_tokens_metadata(_data: Vec<Token>) -> Result<(), String> {
+    STATE.with(|x| {
+        x.borrow_mut().store_tokens(&_data);
+    });
+
     Ok(())
 }

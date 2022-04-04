@@ -16,7 +16,7 @@ cargo build --manifest-path "Cargo.toml" --target $TARGET --package ledger_proxy
 STATUS=$?
 
 if [ "$STATUS" -eq "0" ]; then
-      ../tools/ic-cdk-optimizer \
+      ./tools/ic-cdk-optimizer \
       ./target/$TARGET/release/ledger_proxy.wasm \
       -o ./target/$TARGET/release/ledger_proxy.wasm
 
