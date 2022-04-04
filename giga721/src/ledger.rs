@@ -2,15 +2,14 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use common::{Operation};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
+use ic_cdk_macros::{query};
 
 #[cfg(test)]
 use crate::testing::{time};
-
-use serde::Serialize;
-
 #[cfg(not(test))]
 use ic_cdk::api::time;
 
+use serde::Serialize;
 
 thread_local! {
     pub static LEDGER: Rc<RefCell<Ledger>> = Rc::new(RefCell::new(Ledger::default()));
@@ -32,6 +31,9 @@ pub struct Record {
 #[derive(Serialize, CandidType, Deserialize, Default)]
 pub struct Ledger {
     pub offset: u64,
+
+    pub storage_canister: Option<Principal>,
+
     pub tx: Vec<Record>
 }
 
@@ -42,6 +44,11 @@ impl Ledger {
 
     fn add_record(&mut self, record: &Record) {
         self.tx.push((*record).clone());
+    }
+
+    ///Archives records stored in ledger to archive
+    pub async fn archive(&mut self) -> Result<(), String> {
+        Ok(())
     }
 
     //Creates genesis record in ledger canister
@@ -61,37 +68,8 @@ impl Ledger {
         self.add_record(&record);
 
         record.index
-
-        // let owner = caller();
-        
-        // let event_raw = ic_cdk::export::candid::encode_args((
-        //     owner, //caller 
-        //     Operation::init, //op 
-        //     None::<Principal>, //from
-        //     owner, //to
-        //     0u128, //tokenId
-        //     None::<u64>, //price
-        //     time() as i128 //timestamp
-        // )).unwrap();
-        
-        // let res = ic_cdk::api::call::call_raw(
-        //     self.storage_canister.unwrap(),
-        //     "addRecord",
-        //     event_raw.clone(),
-        //     0,
-        // ).await;
-
-        // match res {
-        //     Ok(res) =>{
-        //         let val1 = Decode!(&res, u128).unwrap();
-        //         return Ok(val1);
-        //     },
-        //     Err((_, s)) => {
-        //         return Err(s);
-        //     }
-        // }
     }
-
+    //Creates mint record in ledger
     pub fn mint(&mut self, caller: Principal, owner: Principal, token_id: u32) -> u64 {
         let record = Record {
             index: self.offset+self.tx.len() as u64,
@@ -110,6 +88,27 @@ impl Ledger {
         record.index
     }
 
+    /// Adds Burn information to ledger
+    #[allow(dead_code)]
+    pub fn burn(&mut self, caller: Principal, owner: Principal, token_id: u32) -> u64 {
+        let record = Record {
+            index: self.offset+self.tx.len() as u64,
+            caller: caller,
+            op: Operation::burn,
+            from: Some(owner),
+            to: None,
+            token_id: token_id,
+            price: None,
+            timestamp: time(),
+            memo: 0
+        };
+
+        self.add_record(&record);
+
+        record.index
+    }
+
+    //Inserts transfer information to ledger
     pub fn transfer(&mut self, from: Principal, to: Principal, token_id: u32) -> u64{
         let record = Record {
             index: self.offset+self.tx.len() as u64,
@@ -182,4 +181,23 @@ impl Ledger {
         record.index 
 
     }
+}
+
+#[query]
+pub fn all_history() -> Vec<Record> {
+    LEDGER.with(|x| x.borrow().tx.clone())
+}
+
+#[query]
+pub fn get_history_by_index(index: u128) -> Option<Record> {
+    LEDGER.with(|x| {
+        // if x.borrow().tx.len() > index as usize { return None; }
+
+        Some(x.borrow().tx[index as usize].clone())
+    })
+}
+
+#[query]
+pub fn tx_amount() -> u128 {
+    LEDGER.with(|x| x.borrow().tx.len() as u128)
 }

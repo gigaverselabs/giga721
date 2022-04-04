@@ -3,3 +3,8 @@ members = [
     "giga721",
     "ledger_proxy"
 ]
+
+[profile.release]
+opt-level="s"
+lto = true
+codegen-units = 1

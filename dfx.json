@@ -5,6 +5,16 @@
         "candid": "giga721/giga721.did",
         "wasm": "target/wasm32-unknown-unknown/release/giga721.wasm",
         "type": "custom"
+      },
+      "storage": {
+        "main": "motoko/storage.mo",
+        "type": "motoko"
+      },
+      "ledger_proxy": {
+        "build": "./build_proxy.sh",
+        "candid": "ledger_proxy/proxy.did",
+        "wasm": "target/wasm32-unknown-unknown/release/ledger_proxy.wasm",
+        "type": "custom"
       }
     },
     "dfx": "0.8.4",

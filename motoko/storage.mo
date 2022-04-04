@@ -93,6 +93,10 @@ shared(msg) actor class Storage(_owner: Principal) {
         return index;
     };
 
+    public query func version(): async Nat {
+        return 2;
+    };
+
     /// Get Project Stats
     public query func stats() : async Stats {
         var highestSell : Nat64 = 0;
@@ -151,6 +155,37 @@ shared(msg) actor class Storage(_owner: Principal) {
     public query func getHistoryByIndex(index: Nat) : async OpRecord {
         return ops[index];
     };
+
+    // public query func getHistoryByToken(tokenId: Nat) : async ?[OpRecord] {
+    //     // var tokens : [var Principal] = Array.init(10000, Principal.fromText("xm4y3-54lfy-pkijk-3gpzg-gsm3l-yr7al-i5ai7-odpf7-l2pmv-222rl-7qe"));
+
+    //     var items : Buffer<OpRecord> = Buffer(0);
+
+    //     for (op in ops.vals()) {
+    //         if (op.tokenId == tokenId) {
+    //             items.add(op);
+    //         }
+    //         // switch (op.op) {
+    //         //     case (#mint) {
+    //         //         tokens[op.tokenId-1] := Option.unwrap(op.from);
+    //         //     };
+
+    //         //     case (#purchase) {
+    //         //         tokens[op.tokenId-1] := Option.unwrap(op.to);
+    //         //     };
+
+    //         //     case (#transfer) {
+    //         //         tokens[op.tokenId-1] := Option.unwrap(op.to);
+    //         //     };
+
+    //         //     case (_) {
+
+    //         //     };
+    //         // };
+    //     };
+
+    //     return items.toArray();
+    // };
 
     // /// Get history by account.
     // public query func getHistoryByAccount(a: Principal) : async ?[OpRecord] {

@@ -9,7 +9,7 @@ use std::ops::Deref;
 use std::rc::Rc;
 
 #[derive(Clone, Debug)]
-pub(crate) struct RcBytes(Rc<ByteBuf>);
+pub struct RcBytes(Rc<ByteBuf>);
 
 impl CandidType for RcBytes {
     fn _ty() -> Type {
@@ -36,6 +36,13 @@ impl<'de> Deserialize<'de> for RcBytes {
 impl From<ByteBuf> for RcBytes {
     fn from(b: ByteBuf) -> Self {
         Self(Rc::new(b))
+    }
+}
+
+impl From<Vec<u8>> for RcBytes {
+    fn from(b: Vec<u8>) -> Self {
+        let buf = ByteBuf::from(b);
+        Self(Rc::new(buf))
     }
 }
 

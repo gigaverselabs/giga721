@@ -1,17 +1,115 @@
+use serde_bytes::ByteBuf;
+use common::rc_bytes::RcBytes;
+use crate::storage::Asset;
 use std::cell::RefCell;
 use std::io;
+use std::collections::HashMap;
 
 use ic_cdk::api::stable::StableMemoryError;
+
+use ic_cdk::export::candid::{Principal};
+
+use crate::token::State;
+use crate::marketplace::{Marketplace, Stats};
+
+use common::SendArgs;
+use ic_cdk::export::candid::{encode_args};
+
+pub fn trap(data: &str) {
+    panic!("{}",data);
+}
+
+pub async fn call_send_dfx(_canister: Principal, args: &SendArgs) -> Result<u64, String> {
+    //Encode args in candid
+    let _event_raw = encode_args((args,))
+        .map_err(|_| String::from("Cannot serialize Transaction Args"))?;
+        
+    Ok(0)
+}
+
+pub fn get_state() -> State {
+    let owner = user_a();
+
+    State {
+        owner: Some(owner),
+        name: String::from("name"),
+        symbol: String::from("symbol"),
+        description: String::from("description"),
+        icon_url: "None".to_string(),
+
+        max_supply: 10000 as u32,
+        total_supply: 0,
+
+        is_paused: false,
+
+        tokens: HashMap::default(),
+        token_owners: HashMap::default(),
+        owners: HashMap::default()
+    }
+}
+
+pub fn set_state() {
+    let state = get_state();
+    *State::get().borrow_mut() = state;
+}
+
+
+pub fn get_marketplace() -> Marketplace {
+    let owner = user_a();
+    let ledger = ledger();
+
+    Marketplace {
+        creators_fee: 2500,
+        creators_address: Some(owner),
+
+        notify_canister: Some(ledger),
+
+        ledger_canister: Some(ledger),
+
+        tx_enabled: true,
+        listings: HashMap::default(),
+
+        payment_offset: 0,
+        listing_offset: 0,
+        payments: Vec::default(),
+        stats: Stats::default()
+    }
+}
+
+pub fn set_marketplace() {
+    let state = get_marketplace();
+    *Marketplace::get().borrow_mut() = state;
+}
+
+pub fn user_a() -> Principal {
+    Principal::from_text("ucoje-n5scm-5ag2l-xpy42-o56he-nu5jr-iq3vm-25e7q-tuq5y-i7vpi-qae").unwrap()
+}
+
+pub fn user_b() -> Principal {
+    Principal::from_text("mjfyj-22dca-dcahz-umwwq-vpe4r-iukdj-uuymz-fvphz-rt6my-g7vrs-5qe").unwrap()
+}
+
+pub fn ledger() -> Principal {
+    Principal::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap()
+}
+
+pub fn get_asset() -> Asset {
+    Asset {
+        name: "example asset".to_string(),
+        content_type: "image/jpg".to_string(),
+        data: RcBytes::from(ByteBuf::from(vec![243; 1024*1024])),
+    }
+}
 
 thread_local! {
     static STORAGE: RefCell<Vec<u8>> = RefCell::new(vec![]);
 }
 
-pub fn clear_storage() {
-    STORAGE.with(|s| {
-        s.borrow_mut().clear();
-    });
-}
+// pub fn clear_storage() {
+//     STORAGE.with(|s| {
+//         s.borrow_mut().clear();
+//     });
+// }
 
 pub fn time() -> u64 {
     0
@@ -23,21 +121,21 @@ pub fn stable_size() -> u32 {
     STORAGE.with(|s| s.borrow().len()) as u32 >> 16
 }
 
-pub fn stable_bytes() -> Vec<u8> {
-    let size = (stable_size() as usize) << 16;
-    let mut vec = Vec::with_capacity(size);
+// pub fn stable_bytes() -> Vec<u8> {
+//     let size = (stable_size() as usize) << 16;
+//     let mut vec = Vec::with_capacity(size);
 
-    // This is super dodgy, don't do this.
-    // This is copied from the current implementation of stable storage.
-    #[allow(clippy::uninit_vec)]
-    unsafe {
-        vec.set_len(size);
-    }
+//     // This is super dodgy, don't do this.
+//     // This is copied from the current implementation of stable storage.
+//     #[allow(clippy::uninit_vec)]
+//     unsafe {
+//         vec.set_len(size);
+//     }
 
-    stable_read(0, vec.as_mut_slice());
+//     stable_read(0, vec.as_mut_slice());
 
-    vec
-}
+//     vec
+// }
 
 pub fn stable_read(offset: u32, buf: &mut [u8]) {
     STORAGE.with(|storage| {
@@ -147,9 +245,9 @@ impl StableReader {
         Ok(buf.len())
     }
 
-    pub fn set_offset(&mut self, offset: usize) {
-        self.offset = offset;
-    }
+    // pub fn set_offset(&mut self, offset: usize) {
+    //     self.offset = offset;
+    // }
 }
 
 impl io::Read for StableReader {

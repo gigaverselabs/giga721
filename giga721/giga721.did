@@ -21,8 +21,6 @@ type StreamingCallbackHttpResponse = record {
   token: opt Token;
 };
 
-type Token = record {};
-
 type StreamingStrategy = variant {
   Callback: record {
     callback: func (Token) -> (StreamingCallbackHttpResponse) query;
@@ -50,8 +48,7 @@ type MintRequest =
 type Asset = 
  record {
    name: text;
-   contentType: text;
-   properties: vec Property;
+   content_type: text;
    data: vec nat8;
  };
 
@@ -60,7 +57,14 @@ type Asset =
     to: principal;
     token_id: nat;
   };
-
+type Token =
+record {
+   id: nat;
+   url: text;
+   name: text;
+   desc: text;
+   properties: vec Property;
+};
  type TokenDesc = 
  record {
    desc: text;
@@ -94,17 +98,43 @@ type Asset =
  type Result = 
  variant {
    Err: text;
-   Ok: text;
+   Ok: nat64;
+ };
+
+  type Result2 = 
+ variant {
+   Err: text;
+   Ok: null;
+ };
+
+ type OpRecord = 
+ record {
+   caller: principal;
+   from: opt principal;
+   index: nat;
+   memo: nat64;
+   op: Operation;
+   price: opt nat64;
+   timestamp: Time;
+   to: opt principal;
+   tokenId: nat;
+ };
+ type Stats = 
+ record {
+   highest_sell: nat64;
+   volume_traded: nat64;
+   owners: nat64;
+   listings: u64;
  };
 
 service : (text, text, text, nat, principal) -> {
-  get_storage_canister: () -> (opt principal) query;
+
+  //Internet computer related endpoints
+  http_request: (request: HttpRequest) -> (HttpResponse) query;
   get_ledger_canister: () -> (opt principal) query;
   get_cycles: () -> (nat) query;
 
-  tx_enabled: () -> (bool) query;
-  set_tx_enabled: (bool) -> (bool);
-
+  //Collection state and basic data (similar to ERC721)
   name: () -> (text) query;
   symbol: () -> (text) query;
   description: () -> (text) query;
@@ -112,13 +142,10 @@ service : (text, text, text, nat, principal) -> {
   owner: () -> (principal) query;
   total_supply: () -> (nat) query;
   creators_fee: () -> (nat) query;
+  is_paused: () -> (bool) query;
 
-  owner_of: (nat) -> (principal) query;
-  user_tokens: (principal) -> (vec nat) query;
-  data_of: (nat) -> (TokenDesc) query;
-  tokens: () -> (vec TokenDesc) query;
 
-  set_storage_canister: (principal) -> (bool);
+  //Management, owner only
   add_genesis_record: () -> (nat);
 
   set_ledger_canister: (principal) -> (bool);
@@ -126,20 +153,39 @@ service : (text, text, text, nat, principal) -> {
   set_description: (text) -> (bool);
   set_icon_url: (text) -> (bool);
 
-  mint: (MintRequest) -> (nat);
-  multi_mint: (vec MintRequest) -> (vec nat);
+  set_paused: (bool) -> (bool);
+
   
-  upload_asset: (Asset) -> (Result);
-
+  //Token actions
+  data_of: (nat) -> (TokenDesc) query;
+  tokens: () -> (vec nat) query;
   transfer_to: (principal, nat) -> (bool);
-  multi_transfer_to: (vec TransferRequest) -> (vec bool);
 
+  owner_of: (nat) -> (principal) query;
+  user_tokens: (principal) -> (vec nat) query;
+
+  //Ledger, token history
+  all_history: () -> (vec OpRecord) query;
+  get_history_by_index: (nat) -> (opt OpRecord) query;
+  stats: () -> (Stats) query;
+  tx_amount: () -> (nat) query;
+
+  //Trading of tokens
+  tx_enabled: () -> (bool) query;
+  set_tx_enabled: (bool) -> (bool);
   get_listed_count: () -> (nat) query;
-  get_listed: (nat) -> (vec Listing) query;
   listings: () -> (vec Listing) query;
-  list: (nat, nat64) -> (bool);
-  delist: (nat) -> (bool);
+  list: (nat, nat64) -> (Result);
+  delist: (nat) -> (Result);
   transaction_notification: (TransactionNotification) -> (Result);
 
-  http_request: (request: HttpRequest) -> (HttpResponse) query;
+
+  //Minting and burining
+  mint_for: (nat, principal) -> (Result);
+  burn: (nat) -> (Result);
+
+  //Assets management and metadata
+  upload_asset: (Asset) -> (Result2);
+  upload_tokens_metadata: (vec Token) -> (Result2);
+  metadata: () -> (vec Token);
 }

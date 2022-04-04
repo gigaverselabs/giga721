@@ -1,18 +1,10 @@
 use std::cell::RefCell;
 use std::cell::Cell;
-use ic_cdk::{caller, trap, id, storage};
-use ic_cdk_macros::*;
-// use ic_cdk::api;
-use ic_cdk::export::candid::{Principal, Decode, CandidType, Deserialize};
 
-// use ic_cdk::storage;
-
-// use serde_bytes::{ByteBuf, Bytes};
-// use std::borrow::Cow;
-// use std::collections::HashMap;
-
+use ic_cdk::{caller, trap, id};
+use ic_cdk::export::candid::{Principal, Decode};
 use ic_cdk::api::call::{call_raw};
-// use ic_cdk::{trap};
+use ic_cdk_macros::*;
 
 use prost::Message;
 
@@ -20,8 +12,8 @@ use common::{TransactionNotification, ICPTs, SendArgs};
 
 use intmap::IntMap;
 
+use common::account_identifier::AccountIdentifier;
 
-mod account_identifier;
 
 mod ledger {
 
@@ -203,8 +195,8 @@ async fn notify(block_height: u64) -> Result<(), String> {
     .unwrap_or_else(|| trap("Transaction transfer is None")) 
     {
         ledger::transaction::Transfer::Send(item) => (
-            account_identifier::AccountIdentifier::from_slice(&item.from.unwrap().hash[..]).unwrap(), 
-            account_identifier::AccountIdentifier::from_slice(&item.to.unwrap().hash[..]).unwrap(), 
+            AccountIdentifier::from_slice(&item.from.unwrap().hash[..]).unwrap(), 
+            AccountIdentifier::from_slice(&item.to.unwrap().hash[..]).unwrap(), 
             item.amount
         ),
         ledger::transaction::Transfer::Burn(_) => trap("Notification failed transfer must be of type send, found burn"),
@@ -212,8 +204,8 @@ async fn notify(block_height: u64) -> Result<(), String> {
     };
 
     //Verify that transaction is for our canister, otherwise throw error
-    let caller_account_id = account_identifier::AccountIdentifier::new(caller_principal_id, None);
-    let canister_account_id = account_identifier::AccountIdentifier::new(id(), None);
+    let caller_account_id = AccountIdentifier::new(caller_principal_id, None);
+    let canister_account_id = AccountIdentifier::new(id(), None);
     if caller_account_id != _from {
         trap("Invalid block! Caller does not match block sender");
     }

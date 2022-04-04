@@ -2,9 +2,11 @@ use candid::CandidType;
 use ic_cdk::export::candid::{Principal};
 use sha2::Sha224;
 use sha2::Digest;
+
 use serde::{de, de::Error, Deserialize, Serialize};
+
 use std::{
-    convert::{TryFrom, TryInto},
+    convert::TryInto,
     fmt::{Display, Formatter},
     str::FromStr,
 };
@@ -32,6 +34,7 @@ pub static SUB_ACCOUNT_ZERO: Subaccount = Subaccount([0; 32]);
 static ACCOUNT_DOMAIN_SEPERATOR: &[u8] = b"\x0Aaccount-id";
 
 impl AccountIdentifier {
+    ///Creates new Account identifier from Principal and sub_account id
     pub fn new(account: Principal, sub_account: Option<Subaccount>) -> AccountIdentifier {
         let mut hash = Sha224::new();
         hash.update(ACCOUNT_DOMAIN_SEPERATOR);
@@ -89,6 +92,7 @@ impl AccountIdentifier {
 
     /// Converts this account identifier into a binary "address".
     /// The address is CRC32(identifier) . identifier.
+    #[allow(dead_code)]
     pub fn to_address(&self) -> [u8; 32] {
         let mut result = [0u8; 32];
         result[0..4].copy_from_slice(&self.generate_checksum());
@@ -97,6 +101,7 @@ impl AccountIdentifier {
     }
 
     /// Tries to parse an account identifier from a binary address.
+    #[allow(dead_code)]
     pub fn from_address(blob: [u8; 32]) -> Result<Self, ChecksumError> {
         check_sum(blob)
     }

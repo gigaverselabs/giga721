@@ -7,26 +7,43 @@ use ic_cdk_macros::{query, update};
 
 use ic_cdk::export::candid::Principal;
 
-use crate::token::{Token, TokenDesc, TokenDescExt};
+use crate::token::{Token, TokenDesc};
 
-// use crate::state::get_state;
 use crate::guards::{owner_guard};
-
-#[query]
-fn get_cycles() -> u128 {
-   return ic_cdk::api::canister_balance() as u128;
-}
-
-
-// #[query]
-// fn get_storage_canister() -> Option<Principal> {
-//     State::get().borrow().storage_canister;
-// }
 
 #[query]
 fn get_ledger_canister() -> Option<Principal> {
     Marketplace::get().borrow().ledger_canister
 }
+#[query]
+fn get_cycles() -> u128 {
+   return ic_cdk::api::canister_balance() as u128;
+}
+
+#[query]
+fn tx_enabled() -> bool {
+    Marketplace::get().borrow().tx_enabled
+}
+#[query]
+fn is_paused() -> bool {
+    State::get().borrow().is_paused
+}
+
+#[update(guard="owner_guard")]
+fn set_tx_enabled(enabled: bool) -> bool {
+    Marketplace::get().borrow_mut().tx_enabled = enabled;
+
+    return true;
+}
+
+#[update(guard="owner_guard")]
+fn set_paused(paused: bool) -> bool {
+    State::get().borrow_mut().is_paused = paused;
+
+    return true;
+}
+
+
 
 #[query]
 fn name() -> String {
@@ -59,35 +76,16 @@ fn total_supply() -> u128 {
 #[query]
 fn creators_fee() -> u128 {
     Marketplace::get().borrow().creators_fee
-    // return State::get().creators_fee;
 }
+
+
 
 #[query]
-fn tx_enabled() -> bool {
-    Marketplace::get().borrow().tx_enabled
-}
-
-#[update(guard="owner_guard")]
-fn set_tx_enabled(enabled: bool) -> bool {
-    // let state = State::get();
-    // state.tx_enabled = enabled;
-    Marketplace::get().borrow_mut().tx_enabled = enabled;
-
-    return true;
-}
-
-#[query]
-fn owner_of(token_id: u128) -> Option<Principal> {
-    // let state = State::get();
-    // if token_id > (state.tokens.len() as u128) || token_id == 0 {trap("Invalid token_id");}
-
-    // let pos = (token_id as usize)-1;
-    // return state.tokens.get(pos).unwrap().owner;
-
+fn owner_of(token_id: u128) -> Principal {
     let state = State::get();
     let mut state = state.borrow_mut();
 
-    state.get_owner(token_id as u32).ok()
+    state.get_owner(token_id as u32).ok().unwrap()
 }
 
 #[query]
@@ -107,46 +105,45 @@ fn user_tokens(user: Principal) -> Vec<u128> {
     }
 }
 
-// #[query]
-// fn data_of(token_id: u128) -> TokenDesc {
-//     let state = State::get();
-//     if token_id > (state.tokens.len() as u128) || token_id == 0 {trap("Invalid token_id");}
-//     let pos = (token_id as usize)-1;
+#[query]
+fn data_of(token_id: u128) -> TokenDesc {
+    let result = STATE.with(|x| x.borrow_mut().data_of(token_id as u32).map_err(|s| trap(&s)));    
 
-//     return state.tokens[pos].clone();
-// }
-// #[query]
-// fn tokens() -> Vec<TokenDesc> {
-//     // let state = State::get();
-//     // return state.tokens.clone();
+    result.unwrap()
+}
 
-//     STATE.with(|x| x.borrow().getTokenDesc().clone())
-// }
+#[query]
+fn metadata() -> Vec<Token> {
+    STATE.with(|x| x.borrow().tokens.values().map(|x| (*x).clone()).collect())
+}
+
+
+#[query]
+fn tokens() -> Vec<u32> {
+    // let state = State::get();
+    // return state.tokens.clone();
+
+    STATE.with(|x| {
+        let tokens : Vec<u32> = x.borrow().token_owners.keys().map(|x| *x).collect();
+
+        tokens
+    })
+}
 
 #[update(guard="owner_guard")]
 fn set_owner(owner: Principal) -> bool {
-    // let state = State::get();
-    // state.owner = owner;
-
     STATE.with(|x| x.borrow_mut().owner = Some(owner));    
 
     return true;
 }
 #[update(guard="owner_guard")]
 fn set_description(description: String) -> bool {
-    // let state = State::get();
-    // state.description = description;
-
     STATE.with(|x| x.borrow_mut().description = description);    
 
     return true;
 }
 #[update(guard="owner_guard")]
 fn set_icon_url(icon_url: String) -> bool {
-    // let state = State::get();
-    // state.icon_url = icon_url;
-
-    // return true;
     STATE.with(|x| x.borrow_mut().icon_url = icon_url);    
 
     return true;
@@ -155,23 +152,8 @@ fn set_icon_url(icon_url: String) -> bool {
 
 #[update(guard="owner_guard")]
 async fn add_genesis_record() -> Result<u64, String> {
-    // let state = State::get();
-
-    // if state.storage_canister == None {trap("Storage Canister is null");}
-
-    // match state.add_genesis_record().await {
-        // Ok(id) => return id,
-        // Err(s) => trap(&s),
-    // }
     Ok(LEDGER.with(|x| x.borrow_mut().add_genesis_record(caller())))
 }
-
-// #[update(guard="owner_guard")]
-// fn set_storage_canister(storage: Principal) -> bool {
-//     State::get().storage_canister = Some(storage);
-
-//     return true;
-// }
 
 #[update(guard="owner_guard")]
 fn set_ledger_canister(ledger: Principal) -> bool {
@@ -180,6 +162,7 @@ fn set_ledger_canister(ledger: Principal) -> bool {
     return true;
 }
 
+//Used to transfer @token_id from owner to @to
 #[update]
 async fn transfer_to(to: Principal, token_id: u128) -> bool {
     let res = STATE.with(|x| x.borrow_mut().transfer(caller(), to, token_id as u32));
@@ -189,6 +172,8 @@ async fn transfer_to(to: Principal, token_id: u128) -> bool {
         Err(s) => trap(&s)
     }
 }
+
+
 
 // #[update]
 // async fn multi_transfer_to(data: Vec<(Principal, u128)>) -> Vec<bool> {
