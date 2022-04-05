@@ -1,3 +1,4 @@
+use crate::marketplace::MARKETPLACE;
 use crate::token::State;
 use crate::marketplace::Marketplace;
 use crate::ledger::LEDGER;
@@ -78,7 +79,24 @@ fn creators_fee() -> u128 {
     Marketplace::get().borrow().creators_fee
 }
 
+#[update(guard="owner_guard")]
+fn set_creators_fee(fee: u128) -> bool {
+    MARKETPLACE.with(|x| x.borrow_mut().creators_fee = fee);    
 
+    return true;
+}
+
+#[query]
+fn creators_address() -> Option<Principal> {
+    Marketplace::get().borrow().creators_address
+}
+
+#[update(guard="owner_guard")]
+fn set_creators_address(creator: Principal) -> bool {
+    MARKETPLACE.with(|x| x.borrow_mut().creators_address = Some(creator));    
+
+    return true;
+}
 
 #[query]
 fn owner_of(token_id: u128) -> Principal {

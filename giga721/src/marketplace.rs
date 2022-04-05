@@ -173,16 +173,16 @@ impl Marketplace {
             created_at_time: None
         };
 
-        // self.payment_offset += 1;
-        // let payments = Payment {
-        //     index: self.payment_offset,
-        //     args: args.clone(),
-        //     time: time(),
-        //     block_height: None,
-        //     error: None
-        // };
+        self.payment_offset += 1;
+        let payments = Payment {
+            index: self.payment_offset,
+            args: args.clone(),
+            time: time(),
+            block_height: None,
+            error: None
+        };
 
-        // self.payments.push(payments);
+        self.payments.push(payments);
 
         let block_height = call_send_dfx(ledger_canister, &args).await?;
 
@@ -315,12 +315,12 @@ use crate::testing::*;
 
         Marketplace::get().borrow_mut().tx_enabled = true;
 
-        let list = Marketplace::get().borrow_mut().list(user_a(), 1, 100000000);
+        let list = Marketplace::get().borrow_mut().list(user_a(), 1, 1000000);
         assert_eq!(list, Ok(1));
 
         let args = TransactionNotification {
             amount: ICPTs {
-                e8s: 100000000
+                e8s: 1000000
             },
             block_height: 12345,
             from: owner,
@@ -333,9 +333,8 @@ use crate::testing::*;
         let purchase = Marketplace::get().borrow_mut().purchase(ledger(), &args).await;
         assert_eq!(purchase, Ok(2));
 
-        let payments = Marketplace::get().borrow().payments.len();
-        assert_eq!(payments, 2);
+        let payments = Marketplace::get().borrow().payments.clone();
 
-
+        assert_eq!(payments.len(), 2);
     }
 }
