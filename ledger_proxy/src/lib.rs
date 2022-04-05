@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::cell::Cell;
 
 use ic_cdk::{caller, trap, id};
-use ic_cdk::export::candid::{Principal, Decode};
+use ic_cdk::export::candid::{Principal, Decode, Error};
 use ic_cdk::api::call::{call_raw};
 use ic_cdk_macros::*;
 
@@ -190,6 +190,7 @@ async fn notify(block_height: u64) -> Result<(), String> {
     .unwrap_or_else(|_| trap("Could not decode block"));
     let transaction = block.transaction
     .unwrap_or_else(|| trap("Transaction is None"));
+
     //Verify that transaction is of type Send (Mint and Burn cannot be processed)
     let (_from, _to, amount) = match transaction.transfer
     .unwrap_or_else(|| trap("Transaction transfer is None")) 
@@ -237,11 +238,11 @@ async fn notify(block_height: u64) -> Result<(), String> {
         0,
     ).await.unwrap_or_else(|(_,s)| trap(&s));
 
-    let res = Decode!(&raw_res, Result<&str, &str>).unwrap();
+    let res = Decode!(&raw_res, Result<u64, String>).unwrap_or_else(|_| trap("Error while decoding candid"));
 
     match res {
         Ok(_) => { return Ok(()); }
-        Err(text) => { trap(text); }
+        Err(text) => { trap(&text); }
     }
 }
 

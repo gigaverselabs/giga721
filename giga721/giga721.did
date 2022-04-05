@@ -151,9 +151,14 @@ service : (text, text, text, nat, principal) -> {
   icon_url: () -> (text) query;
   owner: () -> (principal) query;
   total_supply: () -> (nat) query;
-  creators_fee: () -> (nat) query;
+
   is_paused: () -> (bool) query;
 
+  creators_fee: () -> (nat) query;
+  set_creators_fee: (nat) -> (bool);
+
+  creators_address: () -> (opt principal) query;
+  set_creators_address: (principal) -> (bool);
 
   //Management, owner only
   add_genesis_record: () -> (Result);
@@ -162,6 +167,7 @@ service : (text, text, text, nat, principal) -> {
   set_owner: (principal) -> (bool);
   set_description: (text) -> (bool);
   set_icon_url: (text) -> (bool);
+
 
   set_paused: (bool) -> (bool);
 
