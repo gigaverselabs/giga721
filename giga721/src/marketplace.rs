@@ -173,16 +173,16 @@ impl Marketplace {
             created_at_time: None
         };
 
-        self.payment_offset += 1;
-        let payments = Payment {
-            index: self.payment_offset,
-            args: args.clone(),
-            time: time(),
-            block_height: None,
-            error: None
-        };
+        // self.payment_offset += 1;
+        // let payments = Payment {
+        //     index: self.payment_offset,
+        //     args: args.clone(),
+        //     time: time(),
+        //     block_height: None,
+        //     error: None
+        // };
 
-        self.payments.push(payments);
+        // self.payments.push(payments);
 
         let block_height = call_send_dfx(ledger_canister, &args).await?;
 
@@ -245,9 +245,9 @@ impl Marketplace {
         fee = fee - 10000 - 10000;
 
         //Send ICP to seller
-        let _token_result = self.send_icp(listing.owner, amount, token_id as u64).await;
+        let _token_result = self.send_icp(listing.owner, amount, token_id as u64).await?;
         //Send Fee, TODO: this can be postponed, less items to call
-        let _fee_result = self.send_icp(self.creators_address.unwrap(), fee, token_id as u64).await;
+        let _fee_result = self.send_icp(self.creators_address.unwrap(), fee, token_id as u64).await?;
 
         //Return surplus amount to sender
         if listing.price < args.amount.e8s {
@@ -281,7 +281,7 @@ use crate::testing::*;
 
         let list = Marketplace::get().borrow_mut().list(user_a(), 1, 100000000);
 
-        assert_eq!(list, Ok(1));
+        assert_eq!(list, Ok(0));
     }
 
     #[test]
@@ -291,7 +291,7 @@ use crate::testing::*;
         let owner = user_a();
         let mint_result = STATE.with(|x| x.borrow_mut().mint_token_id(owner, owner, 1));
 
-        assert_eq!(mint_result, Ok(1));
+        assert_eq!(mint_result, Ok(0));
 
         Marketplace::get().borrow_mut().tx_enabled = true;
 
@@ -311,7 +311,7 @@ use crate::testing::*;
         let owner = user_a();
         let mint_result = STATE.with(|x| x.borrow_mut().mint_token_id(owner, owner, 1));
 
-        assert_eq!(mint_result, Ok(1));
+        assert_eq!(mint_result, Ok(0));
 
         Marketplace::get().borrow_mut().tx_enabled = true;
 
@@ -336,6 +336,6 @@ use crate::testing::*;
         let payments = Marketplace::get().borrow().payments.len();
         assert_eq!(payments, 2);
 
-        
+
     }
 }

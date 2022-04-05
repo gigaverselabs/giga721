@@ -5,7 +5,7 @@ import fs from 'fs';
 //Mints new tokens using multi_mint feature, before sending package of tokens to mint, checks if the request is within max_size limits (currently 2mb of data)
 async function run() {
   let actor = getActor(true);
-  let metadata = JSON.parse(fs.readFileSync('../../wojak-metadata.json'));
+  let metadata = JSON.parse(fs.readFileSync('../../json/_metadata.json'));
 
   let data = [];
 
