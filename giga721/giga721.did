@@ -156,7 +156,7 @@ service : (text, text, text, nat, principal) -> {
 
 
   //Management, owner only
-  add_genesis_record: () -> (nat);
+  add_genesis_record: () -> (Result);
 
   set_ledger_canister: (principal) -> (bool);
   set_owner: (principal) -> (bool);

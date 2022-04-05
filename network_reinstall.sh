@@ -10,7 +10,7 @@ dfx canister --network ic create token
 
 dfx build --network ic token
 
-eval dfx canister --network ic install token --argument="'($NAME, $TICKER, $DESCRIPTION, $SIZE, $PUBLIC_KEY)'"
+eval dfx canister --network ic install token --argument="'($NAME, $TICKER, $DESCRIPTION, $SIZE, $PUBLIC_KEY)'" -m reinstall
 
 echo "Installation complete"
 
