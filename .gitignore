@@ -39,9 +39,12 @@ target
 
 .dfx
 
-tools
 data
 
 canister_ids.json
 
 variables.sh
+
+/tools/key.json
+/tools/_data_converter.js
+/tools/node_modules
