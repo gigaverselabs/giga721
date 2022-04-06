@@ -20,10 +20,8 @@ async function run() {
     let result2 = await actor.set_creators_fee(creator_fee);
     console.log(result2);
 
-    // let prin = Principal.from('mjfyj-22dca-dcahz-umwwq-vpe4r-iukdj-uuymz-fvphz-rt6my-g7vrs-5qe');
-    // let result = await actor.mint_for(1, prin);
-
-    // console.log(result);
+    let result3 = await actor.set_tx_enabled(true);
+    console.log(result3);
   }
   catch (e) {
     console.error(e);
