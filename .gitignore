@@ -44,6 +44,7 @@ data
 canister_ids.json
 
 variables.sh
+.env
 
 /tools/key.json
 /tools/_data_converter.js
