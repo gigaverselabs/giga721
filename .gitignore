@@ -49,3 +49,4 @@ variables.sh
 /tools/key.json
 /tools/_data_converter.js
 /tools/node_modules
+/tools/nri.json

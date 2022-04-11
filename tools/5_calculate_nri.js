@@ -102,7 +102,7 @@ async function run() {
 function getNri(rank, length) {
     let a = BigNumber(rank-1).dividedBy(BigNumber(length));
     let nri = BigNumber(1).minus(a);
-    let nrif = nri.toNumber();
+    let nrif = Number(nri.toFixed(4));
 
     return nrif;
 }
