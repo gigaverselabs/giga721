@@ -8,7 +8,7 @@ use ic_cdk_macros::{query, update};
 
 use ic_cdk::export::candid::Principal;
 
-use crate::token::{Token, TokenDesc};
+use crate::token::{Token, TokenDesc, TokenOwner};
 
 use crate::guards::{owner_guard};
 
@@ -96,6 +96,11 @@ fn set_creators_address(creator: Principal) -> bool {
     MARKETPLACE.with(|x| x.borrow_mut().creators_address = Some(creator));    
 
     return true;
+}
+
+#[query]
+fn owners() -> Vec<TokenOwner> {
+    STATE.with(|x| x.borrow_mut().owners())
 }
 
 #[query]

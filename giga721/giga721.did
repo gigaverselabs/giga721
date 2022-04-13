@@ -74,6 +74,11 @@ record {
    properties: vec Property;
    url: text;
  };
+ type Owner = 
+ record {
+   id: nat;
+   owner: principal;
+ };
 
  type Listing = 
  record {
@@ -176,6 +181,7 @@ service : (text, text, text, nat, principal) -> {
   data_of: (nat) -> (TokenDesc) query;
   tokens: () -> (vec nat) query;
   transfer_to: (principal, nat) -> (bool);
+  owners: () -> (vec Owner) query;
 
   owner_of: (nat) -> (principal) query;
   user_tokens: (principal) -> (vec nat) query;

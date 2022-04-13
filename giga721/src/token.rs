@@ -56,6 +56,12 @@ pub struct TokenDesc {
 }
 
 #[derive(CandidType, Deserialize, Clone)]
+pub struct TokenOwner {
+    pub id: u128,
+    pub owner: Principal,
+}
+
+#[derive(CandidType, Deserialize, Clone)]
 pub struct TokenDescExt {
     pub id: u128,
     pub url: String,
@@ -217,6 +223,14 @@ impl State {
         // if token_id > self.tokens.len() as u32 || token_id == 0  { return Err("Invalid token_id".to_string()); }
 
         Ok(())
+    }
+
+    ///Returns vec of token owners, instead of hashmap
+    pub fn owners(&mut self) -> Vec<TokenOwner> {
+        self.token_owners.iter().map(|(key, val)| TokenOwner {
+            id: *key as u128,
+            owner: *val
+        } ).collect()
     }
 
     /// Returns the owner of given token_id or Err if token is not minted
