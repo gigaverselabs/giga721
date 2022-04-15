@@ -100,13 +100,14 @@ impl State {
         STATE.with(|x| x.clone())
     }
 
-    //Stores token metadata
+    ///Stores token metadata for all tokens
     pub fn store_tokens(&mut self, tokens: &Vec<Token>) {
         for i in tokens {
             self.tokens.insert(i.id as u32, i.clone());
         }
     }
 
+    //Returns data of token
     pub fn data_of(&mut self, token_id: u32) -> Result<TokenDesc, String> {
         self.check_token_id(token_id)?;
 
@@ -124,7 +125,8 @@ impl State {
         Ok(item)
     }
 
-    fn assign_to(&mut self, to: Principal, token_id: u32) {
+    ///Assigns token to given principal, use with caution
+    pub fn assign_to(&mut self, to: Principal, token_id: u32) {
         let list = self.owners.get_mut(&to);
 
         match list {
@@ -216,7 +218,7 @@ impl State {
     }
  
     /// Checks if token with given id was minted
-    pub fn check_token_id(&mut self,token_id: u32) -> Result<(), String> {
+    pub fn check_token_id(&self,token_id: u32) -> Result<(), String> {
         if !self.token_owners.contains_key(&token_id) {
             return Err("Invalid token_id".to_string())
         }
@@ -226,7 +228,7 @@ impl State {
     }
 
     ///Returns vec of token owners, instead of hashmap
-    pub fn owners(&mut self) -> Vec<TokenOwner> {
+    pub fn owners(&self) -> Vec<TokenOwner> {
         self.token_owners.iter().map(|(key, val)| TokenOwner {
             id: *key as u128,
             owner: *val
@@ -241,7 +243,7 @@ impl State {
     }
 
     /// Verifies that the owner of given token_id is @prin
-    pub fn check_owner(&mut self, token_id: u32, prin: Principal) -> Result<Principal, String> {
+    pub fn check_owner(&self, token_id: u32, prin: Principal) -> Result<Principal, String> {
         let owner = self.token_owners.get(&token_id).ok_or_else(|| String::from("Token not minted"))?;
 
         //Check if current owner of the token is initiating transfer
@@ -270,7 +272,7 @@ impl State {
         //Check if token was minted and sender is the owner of token_id
         self.check_owner(token_id, from)?;
 
-        //First take off listing
+        //First take off listing, ignore if not possible (it was not listed)
         let _ = MARKETPLACE.with(|x| x.borrow_mut().delist(from, token_id));
 
         //Update owner table
@@ -295,15 +297,16 @@ use crate::testing::*;
         let prin = Principal::from_text("tushn-jfas4-lrw4y-d3hun-lyc2x-hr2o2-2spfo-ak45s-jzksj-fzvln-yqe").unwrap();
         let to = Principal::from_text("tushn-jfas4-lrw4y-d3hun-lyc2x-hr2o2-2spfo-ak45s-jzksj-fzvln-yqe").unwrap();
         let token_id = 1 as u32;
-
         let mint_result = state.mint(prin);
+
+        STATE.with(|x| *x.borrow_mut() = state);
 
         assert_eq!(mint_result, Ok(1));
 
         let len =  LEDGER.with(|x| x.borrow().tx.len());
         assert_eq!(len, 1);
-        
-        state.transfer(prin, to, token_id).unwrap();
+
+        let _ = STATE.with(|x| x.borrow_mut().transfer(prin, to, token_id));
     }
 
     #[test]
@@ -346,7 +349,7 @@ use crate::testing::*;
 
         let mint_result = state.mint_token_id(prin, prin, 100);
 
-        assert_eq!(mint_result, Ok(100));
+        assert_eq!(mint_result, Ok(0));
 
         let len =  LEDGER.with(|x| x.borrow().tx.len());
         assert_eq!(len, 1);

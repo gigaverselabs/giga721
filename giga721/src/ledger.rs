@@ -1,11 +1,12 @@
-use std::rc::Rc;
-use std::cell::RefCell;
-use common::{Operation};
+use common::Operation;
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
-use ic_cdk_macros::{query};
+use ic_cdk_macros::{query, update};
+use std::cell::RefCell;
+use std::rc::Rc;
+use crate::guards::{owner_guard, not_paused};
 
 #[cfg(test)]
-use crate::testing::{time};
+use crate::testing::time;
 #[cfg(not(test))]
 use ic_cdk::api::time;
 
@@ -25,7 +26,7 @@ pub struct Record {
     pub token_id: u32,
     pub price: Option<u64>,
     pub timestamp: u64,
-    pub memo: u64
+    pub memo: u64,
 }
 
 #[derive(Serialize, CandidType, Deserialize, Default)]
@@ -34,7 +35,7 @@ pub struct Ledger {
 
     pub storage_canister: Option<Principal>,
 
-    pub tx: Vec<Record>
+    pub tx: Vec<Record>,
 }
 
 impl Ledger {
@@ -46,15 +47,19 @@ impl Ledger {
         self.tx.push((*record).clone());
     }
 
-    ///Archives records stored in ledger to archive
-    pub async fn archive(&mut self) -> Result<(), String> {
-        Ok(())
+    fn get_token_history(&mut self, token_id: u32) -> Vec<Record> {
+        self.tx.iter().filter(|x| x.token_id == token_id).map(|x| x.clone()).collect()
     }
+
+    // ///Archives records stored in ledger to archive
+    // pub async fn archive(&mut self) -> Result<(), String> {
+    //     Ok(())
+    // }
 
     //Creates genesis record in ledger canister
     pub fn add_genesis_record(&mut self, caller: Principal) -> u64 {
         let record = Record {
-            index: self.offset+self.tx.len() as u64,
+            index: self.offset + self.tx.len() as u64,
             caller: caller,
             op: Operation::init,
             from: None,
@@ -62,7 +67,7 @@ impl Ledger {
             token_id: 0,
             price: None,
             timestamp: time(),
-            memo: 0
+            memo: 0,
         };
 
         self.add_record(&record);
@@ -72,7 +77,7 @@ impl Ledger {
     //Creates mint record in ledger
     pub fn mint(&mut self, caller: Principal, owner: Principal, token_id: u32) -> u64 {
         let record = Record {
-            index: self.offset+self.tx.len() as u64,
+            index: self.offset + self.tx.len() as u64,
             caller: caller,
             op: Operation::mint,
             from: Some(owner),
@@ -80,7 +85,7 @@ impl Ledger {
             token_id: token_id,
             price: None,
             timestamp: time(),
-            memo: 0
+            memo: 0,
         };
 
         self.add_record(&record);
@@ -92,7 +97,7 @@ impl Ledger {
     #[allow(dead_code)]
     pub fn burn(&mut self, caller: Principal, owner: Principal, token_id: u32) -> u64 {
         let record = Record {
-            index: self.offset+self.tx.len() as u64,
+            index: self.offset + self.tx.len() as u64,
             caller: caller,
             op: Operation::burn,
             from: Some(owner),
@@ -100,7 +105,7 @@ impl Ledger {
             token_id: token_id,
             price: None,
             timestamp: time(),
-            memo: 0
+            memo: 0,
         };
 
         self.add_record(&record);
@@ -109,17 +114,17 @@ impl Ledger {
     }
 
     //Inserts transfer information to ledger
-    pub fn transfer(&mut self, from: Principal, to: Principal, token_id: u32) -> u64{
+    pub fn transfer(&mut self, from: Principal, to: Principal, token_id: u32) -> u64 {
         let record = Record {
-            index: self.offset+self.tx.len() as u64,
+            index: self.offset + self.tx.len() as u64,
             caller: from,
-            op: Operation::mint,
+            op: Operation::transfer,
             from: Some(from),
             to: Some(to),
             token_id: token_id,
             price: None,
             timestamp: time(),
-            memo: 0
+            memo: 0,
         };
 
         self.add_record(&record);
@@ -129,7 +134,7 @@ impl Ledger {
 
     pub fn list(&mut self, from: Principal, token_id: u32, price: u64) -> u64 {
         let record = Record {
-            index: self.offset+self.tx.len() as u64,
+            index: self.offset + self.tx.len() as u64,
             caller: from,
             op: Operation::list,
             from: Some(from),
@@ -137,7 +142,7 @@ impl Ledger {
             token_id: token_id,
             price: Some(price),
             timestamp: time(),
-            memo: 0
+            memo: 0,
         };
 
         self.add_record(&record);
@@ -147,7 +152,7 @@ impl Ledger {
 
     pub fn delist(&mut self, from: Principal, token_id: u32) -> u64 {
         let record = Record {
-            index: self.offset+self.tx.len() as u64,
+            index: self.offset + self.tx.len() as u64,
             caller: from,
             op: Operation::delist,
             from: Some(from),
@@ -155,7 +160,7 @@ impl Ledger {
             token_id: token_id,
             price: None,
             timestamp: time(),
-            memo: 0
+            memo: 0,
         };
 
         self.add_record(&record);
@@ -163,9 +168,16 @@ impl Ledger {
         record.index
     }
 
-    pub fn purchase(&mut self, caller: Principal, from: Principal, to: Principal, token_id: u32, price: u64) -> u64 {
+    pub fn purchase(
+        &mut self,
+        caller: Principal,
+        from: Principal,
+        to: Principal,
+        token_id: u32,
+        price: u64,
+    ) -> u64 {
         let record = Record {
-            index: self.offset+self.tx.len() as u64,
+            index: self.offset + self.tx.len() as u64,
             caller: caller,
             op: Operation::purchase,
             from: Some(from),
@@ -173,13 +185,12 @@ impl Ledger {
             token_id: token_id,
             price: Some(price),
             timestamp: time(),
-            memo: 0
+            memo: 0,
         };
 
         self.add_record(&record);
 
-        record.index 
-
+        record.index
     }
 }
 
@@ -198,6 +209,28 @@ pub fn get_history_by_index(index: u128) -> Option<Record> {
 }
 
 #[query]
+pub fn get_history_by_token(token: u32) -> Vec<Record> {
+    LEDGER.with(|x| x.borrow_mut().get_token_history(token).clone())
+    // LEDGER.with(|x| {
+    //     x.borrow()
+    //         .tx
+    //         .iter()
+    //         .filter(|y| y.token_id == token)
+    //         .collect()
+    // })
+}
+
+#[query]
 pub fn tx_amount() -> u128 {
     LEDGER.with(|x| x.borrow().tx.len() as u128)
+}
+
+#[update(guard="owner_guard")]
+pub fn upload_history(mut data: Vec<Record>) -> bool {
+    LEDGER.with(|x| {
+        let mut ledger = x.borrow_mut();
+        ledger.tx.append(&mut data);
+    });
+
+    true
 }

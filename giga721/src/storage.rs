@@ -206,24 +206,24 @@ impl StableStorage {
         //Skip state info
         let mut offset = 12;
 
-        print(format!("Items in stable storage: {}", items));
+        // print(format!("Items in stable storage: {}", items));
 
         for _i in 0..items {
 
-            print(format!("Loading item: {}", _i));
+            // print(format!("Loading item: {}", _i));
             
             //Read asset name
             let mut name = String::default();
             offset += self.read_str(offset, &mut name)?;
 
-            print(format!("Name: {}", name));
+            // print(format!("Name: {}", name));
             
 
             //Read headers of assets
             let mut headers_size: u32 = 0;
             offset += self.read_u32(offset, &mut headers_size)?;
 
-            print(format!("Headers size: {}", headers_size));
+            // print(format!("Headers size: {}", headers_size));
 
 
             let mut headers_vec = vec![0; headers_size as usize];
@@ -240,7 +240,7 @@ impl StableStorage {
             let mut data_size: u32 = 0;
             offset += self.read_u32(offset, &mut data_size)?;
 
-            print(format!("Data size: {}", data_size));
+            // print(format!("Data size: {}", data_size));
 
 
             self.assets
@@ -294,7 +294,7 @@ impl StableStorage {
         self.state_offset = offset;
         self.state_size = size;
 
-        print(format!("offset: {} , size: {}",self.state_offset, self.state_size));
+        // print(format!("offset: {} , size: {}",self.state_offset, self.state_size));
 
         let mut vec = vec![0; self.state_size as usize];
         stable_read(self.state_offset, &mut vec);

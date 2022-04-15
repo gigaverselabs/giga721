@@ -98,19 +98,19 @@ impl Marketplace {
         MARKETPLACE.with(|x| x.clone())
     }
 
-    fn is_tx_enabled(&mut self) -> Result<(), String> {
+    fn is_tx_enabled(&self) -> Result<(), String> {
         if !self.tx_enabled { return Err(String::from("Transactions are not enabled")); }
         Ok(())
     }
 
-    ///Adds token to listing
+    ///Adds token to listing, this will not check if from principal owns the listed token!
     pub fn list(&mut self, from: Principal, token_id: u32, price: u64) -> Result<u64, String> {
         self.is_tx_enabled()?;
 
-        STATE.with(|x| x.borrow_mut().check_token_id(token_id))?;
+        STATE.with(|x| x.borrow().check_token_id(token_id))?;
 
         //Check if current owner of the token is listing
-        let owner = STATE.with(|x| x.borrow_mut().check_owner(token_id, from))?;
+        let owner = STATE.with(|x| x.borrow().check_owner(token_id, from))?;
 
         if price < 1000000 { return Err(String::from("Minimum listing price is 0.01")); }
 
@@ -140,11 +140,8 @@ impl Marketplace {
         return Ok(block);
     }
 
-    ///Removes token from listing
+    ///Removes token from listing, this will not check if from principal owns the delisted token!
     pub fn delist(&mut self, from: Principal, token_id: u32) -> Result<u64, String>  {
-        //Check if current owner of the token is listing
-        STATE.with(|x| x.borrow_mut().check_owner(token_id, from))?;
-        
         //Remove listing
         self.listings.remove(&token_id).ok_or_else(|| String::from("Token is not listed"))?;
 
@@ -275,13 +272,13 @@ use crate::testing::*;
         let owner = user_a();
         let mint_result = STATE.with(|x| x.borrow_mut().mint_token_id(owner, owner, 1));
 
-        assert_eq!(mint_result, Ok(1));
+        assert_eq!(mint_result, Ok(0));
 
         Marketplace::get().borrow_mut().tx_enabled = true;
 
         let list = Marketplace::get().borrow_mut().list(user_a(), 1, 100000000);
 
-        assert_eq!(list, Ok(0));
+        assert_eq!(list, Ok(1));
     }
 
     #[test]

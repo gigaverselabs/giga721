@@ -1,17 +1,18 @@
 export function convert_data(data) {
   const props = [
     'Background',
-    'Head',
-    'Expression',
+    'Body',
+    'Nose',
     'Mouth',
+    'Eyes',
+    'Head',
     'Top',
-    'Face',
   ];
 
   let item = {
     id: data.tokenId,
     url: '/Token/' + data.tokenId,
-    name: 'Wojak #' + data.tokenId,
+    name: 'ICPunks #' + data.tokenId,
     desc: '',
     properties: []
   }
@@ -38,4 +39,6 @@ export function getMetadata() {
 
     data.push(item);
   }
+
+  return data;
 }

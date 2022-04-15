@@ -10,7 +10,7 @@ use ic_cdk::export::candid::Principal;
 
 use crate::token::{Token, TokenDesc, TokenOwner};
 
-use crate::guards::{owner_guard};
+use crate::guards::{owner_guard, not_paused};
 
 #[query]
 fn get_ledger_canister() -> Option<Principal> {
@@ -43,8 +43,6 @@ fn set_paused(paused: bool) -> bool {
 
     return true;
 }
-
-
 
 #[query]
 fn name() -> String {

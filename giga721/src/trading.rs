@@ -1,3 +1,4 @@
+use crate::token::State;
 use crate::marketplace::Listing;
 use crate::marketplace::Marketplace;
 use ic_cdk_macros::{query, update};
@@ -44,11 +45,15 @@ fn listings() -> Vec<Listing> {
 
 #[update]
 fn list(token_id: u32, price: u64) -> Result<u64, String> {
+    //Only token owner can call this
+    State::get().borrow().check_owner(token_id, caller())?;
     Marketplace::get().borrow_mut().list(caller(), token_id, price)
 
 }
 #[update]
 async fn delist(token_id: u32) -> Result<u64, String> {
+    //Only token owner can call this
+    State::get().borrow().check_owner(token_id, caller())?;
     Marketplace::get().borrow_mut().delist(caller(), token_id)
 }
 
