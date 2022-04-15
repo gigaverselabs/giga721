@@ -1,4 +1,4 @@
-use crate::token::Token;
+use crate::token::{Token, TokenOwner};
 use crate::storage::STORAGE;
 use crate::token::STATE;
 use crate::storage::Asset;

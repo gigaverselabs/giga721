@@ -20,7 +20,7 @@ fn init(name: String, symbol: String, desc: String, max_supply: i128, owner: Pri
 
         max_supply: max_supply as u32,
         total_supply: 0,
-        is_paused: false,
+        is_paused: true,
 
         tokens: HashMap::default(),
         token_owners: HashMap::default(),
@@ -43,7 +43,7 @@ fn pre_upgrade() {
     st.store_state((&*state.borrow(), &*ledger.borrow(), &*market.borrow()))
         .unwrap();
 
-    print(format!("offset: {} , size: {}",st.state_offset, st.state_size));
+    // print(format!("offset: {} , size: {}",st.state_offset, st.state_size));
 }
 
 #[post_upgrade]

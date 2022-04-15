@@ -1,4 +1,4 @@
-type Time = int;
+type Time = nat64;
 
 //HttpRequest related types
 type HeaderField = record { text; text; };
@@ -126,13 +126,13 @@ record {
  record {
    caller: principal;
    from: opt principal;
-   index: nat;
+   index: nat64;
    memo: nat64;
    op: Operation;
    price: opt nat64;
    timestamp: Time;
    to: opt principal;
-   tokenId: nat;
+   token_id: nat32;
  };
  type Stats = 
  record {
@@ -144,7 +144,7 @@ record {
 
 service : (text, text, text, nat, principal) -> {
 
-  //Internet computer related endpoints
+  //Internet computer related endpoints, will be upgraded to inclide more stats
   http_request: (request: HttpRequest) -> (HttpResponse) query;
   get_ledger_canister: () -> (opt principal) query;
   get_cycles: () -> (nat) query;
@@ -157,7 +157,9 @@ service : (text, text, text, nat, principal) -> {
   owner: () -> (principal) query;
   total_supply: () -> (nat) query;
 
+  //Paused canister will reject, transfers, listings and purchases
   is_paused: () -> (bool) query;
+  set_paused: (bool) -> (bool);
 
   creators_fee: () -> (nat) query;
   set_creators_fee: (nat) -> (bool);
@@ -173,36 +175,45 @@ service : (text, text, text, nat, principal) -> {
   set_description: (text) -> (bool);
   set_icon_url: (text) -> (bool);
 
-
-  set_paused: (bool) -> (bool);
-
   
-  //Token actions
-  data_of: (nat) -> (TokenDesc) query;
+  //Token Data
+  //Returns ids of minted tokens
   tokens: () -> (vec nat) query;
-  transfer_to: (principal, nat) -> (bool);
-  owners: () -> (vec Owner) query;
-
+  //Returns data of given token, including owner and metadata
+  data_of: (nat) -> (TokenDesc) query;
+  //Returns owner of token
   owner_of: (nat) -> (principal) query;
+  //Returns all tokens with their owners
+  owners: () -> (vec Owner) query;
+  //Returns user tokens
   user_tokens: (principal) -> (vec nat) query;
+
+  transfer_to: (principal, nat) -> (bool);
+
 
   //Ledger, token history
   all_history: () -> (vec OpRecord) query;
   get_history_by_index: (nat) -> (opt OpRecord) query;
+  //Returns history of given token_id
+  get_history_by_token: (nat) -> (vec OpRecord) query;
   stats: () -> (Stats) query;
   tx_amount: () -> (nat) query;
-
+  
+  //Migration
+  upload_history: (vec OpRecord) -> (bool);
+  upload_token_owners: (vec Owner) -> (bool);
+  
   //Trading of tokens
   tx_enabled: () -> (bool) query;
   set_tx_enabled: (bool) -> (bool);
   get_listed_count: () -> (nat) query;
+  //Returns all current listings
   listings: () -> (vec Listing) query;
   list: (nat, nat64) -> (Result);
   delist: (nat) -> (Result);
   transaction_notification: (TransactionNotification) -> (Result);
 
-
-  //Minting and burining
+  //Minting and burning
   mint_for: (nat, principal) -> (Result);
   burn: (nat) -> (Result);
 

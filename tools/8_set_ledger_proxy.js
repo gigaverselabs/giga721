@@ -5,7 +5,7 @@ import { getActor } from "./_common.js";
 async function run() {
   let actor = getActor(true);
   try {
-    let canister = Principal.from('3rwb6-dyaaa-aaaah-qczia-cai');
+    let canister = Principal.from('i3oug-lyaaa-aaaah-qco3a-cai');
     let result = await actor.set_ledger_canister(canister);
 
     console.log(result);
