@@ -195,7 +195,7 @@ impl State {
         //Increase number of minted tokens
         self.total_supply += 1;
 
-        let block_id = LEDGER.with(|x| x.borrow_mut().mint(caller, caller, token_id));
+        let block_id = LEDGER.with(|x| x.borrow_mut().mint(caller, to, token_id));
 
         Ok(block_id)
     }
