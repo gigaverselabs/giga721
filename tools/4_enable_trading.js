@@ -1,5 +1,5 @@
 import { Principal } from "@dfinity/principal";
-import { getActor } from "./_common.js";
+import { getActor, getCanisterId } from "./_common.js";
 import 'dotenv/config';
  
 
@@ -11,8 +11,12 @@ async function run() {
     let creator = Principal.from(process.env.CREATOR);
     let creator_fee = Number(process.env.CREATOR_FEE);
 
-    // console.log(creator.toString());
-    // console.log(creator_fee);
+    console.log("Creator: "+creator.toString());
+    console.log("Fee: "+creator_fee);
+
+    let canister = Principal.from(getCanisterId(true, "ledger_proxy"));
+    let result = await actor.set_ledger_canister(canister);
+    console.log(result);
 
     let result1 = await actor.set_creators_address(creator);
     console.log(result1);
@@ -22,6 +26,9 @@ async function run() {
 
     let result3 = await actor.set_tx_enabled(true);
     console.log(result3);
+
+    let result4 = await actor.set_paused(false);
+    console.log(result4);
   }
   catch (e) {
     console.error(e);

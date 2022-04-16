@@ -12,35 +12,19 @@ var keyData = fs.readFileSync('./key.json', 'utf8');
 var key = Ed25519KeyIdentity.fromJSON(keyData);
 console.log("Loaded principal: " + key.getPrincipal().toString())
 
-function getCanisterId(useProd) {
+export function getCanisterId(useProd, canister) {
     let canisterId = null;
 
     if (useProd) {
         var data = JSON.parse(fs.readFileSync("../canister_ids.json"))
-        canisterId = data["token"]["ic"];
+        canisterId = data[canister]["ic"];
 
     } else {
         var data = JSON.parse(fs.readFileSync("../.dfx/local/canister_ids.json"))
-        canisterId = data["token"]["local"];
+        canisterId = data[canister]["local"];
     }
 
-    console.log("Token Canister Id: " + canisterId);
-    return canisterId;
-}
-
-function getProxyId(useProd) {
-    let canisterId = null;
-
-    if (useProd) {
-        var data = JSON.parse(fs.readFileSync("../canister_ids.json"))
-        canisterId = data["ledger_proxy"]["ic"];
-
-    } else {
-        var data = JSON.parse(fs.readFileSync("../.dfx/local/canister_ids.json"))
-        canisterId = data["ledger_proxy"]["local"];
-    }
-
-    console.log("Proxy Canister Id: " + canisterId);
+    console.log(canister+" Canister Id: " + canisterId);
     return canisterId;
 }
 
@@ -48,7 +32,7 @@ function getProxyId(useProd) {
 export function getActor(useProd) {
 
     let httpAgent = null;
-    let canisterId = getCanisterId(useProd);
+    let canisterId = getCanisterId(useProd, "token");
 
     if (useProd) {
         var host = "https://boundary.ic0.app/"; //ic
@@ -73,7 +57,7 @@ export function getActor(useProd) {
 export function getLedgerActor(useProd) {
 
     let httpAgent = null;
-    let canisterId = getProxyId(useProd);
+    let canisterId = getCanisterId(useProd, "ledger_proxy");
 
     if (useProd) {
         var host = "https://boundary.ic0.app/"; //ic
