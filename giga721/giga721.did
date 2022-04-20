@@ -118,6 +118,7 @@ record {
    init;
    list;
    mint;
+   burn;
    purchase;
    transfer;
  };
@@ -195,7 +196,7 @@ service : (text, text, text, nat, principal) -> {
   all_history: () -> (vec OpRecord) query;
   get_history_by_index: (nat) -> (opt OpRecord) query;
   //Returns history of given token_id
-  get_history_by_token: (nat) -> (vec OpRecord) query;
+  get_history_by_token: (nat32) -> (vec OpRecord) query;
   stats: () -> (Stats) query;
   tx_amount: () -> (nat) query;
   
