@@ -70,7 +70,7 @@ pub struct ICPTs {
     pub e8s: u64,
 }
 
-#[derive(Clone, CandidType, Deserialize)]
+#[derive(Clone, CandidType, Deserialize, Serialize)]
 pub struct TransactionNotification {
     pub amount: ICPTs,
     pub block_height: u64,
@@ -79,6 +79,13 @@ pub struct TransactionNotification {
     pub memo: u64,
     pub to: Principal,
     pub to_subaccount: Option<Subaccount>,
+}
+
+#[derive(Clone, CandidType, Deserialize, Serialize)]
+pub struct TransactionResponse {
+    pub block: u64,
+    pub creators_fee: u64,
+    pub seller: Principal
 }
 
 #[derive(Clone, CandidType, Deserialize,Serialize)]

@@ -69,9 +69,9 @@ pub fn get_marketplace() -> Marketplace {
         tx_enabled: true,
         listings: HashMap::default(),
 
-        payment_offset: 0,
+        // payment_offset: 0,
         listing_offset: 0,
-        payments: Vec::default(),
+        // payments: Vec::default(),
         stats: Stats::default()
     }
 }
