@@ -5,8 +5,8 @@ import { getActor } from "./_common.js";
 async function run() {
   let actor = getActor(true);
   try {
-    let prin = Principal.from('mjfyj-22dca-dcahz-umwwq-vpe4r-iukdj-uuymz-fvphz-rt6my-g7vrs-5qe');
-    let result = await actor.mint_for(1, prin);
+    let prin = Principal.from('dwymk-kn72k-3b7pm-jkqo6-w2b6o-mb4wc-amwya-k2m4s-7vh54-qq5p3-kqe');
+    let result = await actor.mint_for(3, prin);
 
     console.log(result);
   }

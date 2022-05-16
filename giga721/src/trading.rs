@@ -1,12 +1,10 @@
 use crate::token::State;
-use crate::marketplace::Listing;
-use crate::marketplace::Marketplace;
+use crate::marketplace::{ Listing, Marketplace };
 use ic_cdk_macros::{query, update};
-
 
 use ic_cdk::{caller};
 
-use common::{ TransactionNotification };
+use common::{ TransactionNotification, TransactionResponse };
 
 #[query]
 fn get_listed_count() -> u128 {
@@ -58,6 +56,6 @@ async fn delist(token_id: u32) -> Result<u64, String> {
 }
 
 #[update]
-async fn transaction_notification(args: TransactionNotification) -> Result<u64, String> {
-    Marketplace::get().borrow_mut().purchase(caller(), &args).await
+async fn transaction_notification(args: TransactionNotification) -> Result<TransactionResponse, String> {
+    Marketplace::get().borrow_mut().purchase(caller(), &args)
 }

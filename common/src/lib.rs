@@ -40,3 +40,4 @@ pub fn account_id(account: Principal, sub_account: Option<Subaccount>) -> String
     return hex::encode(vec);
 }
 
+pub const TX_FEE : u64 = 10000;

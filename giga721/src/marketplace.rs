@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use common::{ SendArgs, TransactionNotification, ICPTs };
+use common::{ SendArgs, TransactionNotification, ICPTs, TransactionResponse };
 use std::cell::RefCell;
 use std::collections::HashMap;
 
@@ -26,15 +26,15 @@ thread_local! {
     pub static MARKETPLACE: Rc<RefCell<Marketplace>> = Rc::new(RefCell::new(Marketplace::default()));
 }
 
-#[derive(Clone, CandidType, Deserialize, Serialize)]
-pub struct Payment {
-    pub index: u64,
-    pub time: u64,
-    pub args: SendArgs,
-    // pub status: PaymentStatus,
-    pub block_height: Option<u64>,
-    pub error: Option<String>
-}
+// #[derive(Clone, CandidType, Deserialize, Serialize)]
+// pub struct Payment {
+//     pub index: u64,
+//     pub time: u64,
+//     pub args: SendArgs,
+//     // pub status: PaymentStatus,
+//     pub block_height: Option<u64>,
+//     pub error: Option<String>
+// }
 
 #[derive(Clone, CandidType, Deserialize, Serialize)]
 pub struct Listing {
@@ -76,8 +76,8 @@ pub struct Marketplace {
     pub listing_offset: u64,
     pub listings: HashMap<u32, Listing>,
 
-    pub payment_offset: u64,
-    pub payments: Vec<Payment>,
+    // pub payment_offset: u64,
+    // pub payments: Vec<Payment>,
 
     pub stats: Stats,
 }
@@ -155,50 +155,51 @@ impl Marketplace {
         self.ledger_canister.ok_or_else(|| String::from("Ledger canister not set"))
     }
 
-    ///Sends ICP to arbitrary principal id
-    pub async fn send_icp(&mut self, to: Principal, amount: u64, memo: u64) -> Result<u64, String> {
-        let ledger_canister = self.get_ledger_canister()?;
+    // ///Sends ICP to arbitrary principal id
+    // pub async fn send_icp(&mut self, to: Principal, amount: u64, memo: u64) -> Result<u64, String> {
+    //     let ledger_canister = self.get_ledger_canister()?;
 
-        let to_account = common::account_id(to, None).clone();
+    //     let to_account = common::account_id(to, None).clone();
         
-        let args = SendArgs {
-            memo: memo,
-            amount: ICPTs { e8s: amount },
-            fee: ICPTs { e8s: 10000 },
-            from_subaccount: None,
-            to: to_account,
-            created_at_time: None
-        };
+    //     let args = SendArgs {
+    //         memo: memo,
+    //         amount: ICPTs { e8s: amount },
+    //         fee: ICPTs { e8s: 10000 },
+    //         from_subaccount: None,
+    //         to: to_account,
+    //         created_at_time: None
+    //     };
 
-        self.payment_offset += 1;
-        let payments = Payment {
-            index: self.payment_offset,
-            args: args.clone(),
-            time: time(),
-            block_height: None,
-            error: None
-        };
+    //     self.payment_offset += 1;
+    //     let payments = Payment {
+    //         index: self.payment_offset,
+    //         args: args.clone(),
+    //         time: time(),
+    //         block_height: None,
+    //         error: None
+    //     };
 
-        self.payments.push(payments);
+    //     self.payments.push(payments);
 
-        let block_height = call_send_dfx(ledger_canister, &args).await?;
+    //     let block_height = call_send_dfx(ledger_canister, &args).await?;
 
-        Ok(block_height)
-    }
+    //     Ok(block_height)
+    // }
 
     //Wrap for purchase, if failed returns funds to original caller 
-    pub async fn purchase(&mut self, caller: Principal, args: &TransactionNotification)-> Result<u64, String> {
-        let result = self._purchase(caller, args).await;
+    pub fn purchase(&mut self, caller: Principal, args: &TransactionNotification)-> Result<TransactionResponse, String> {
+        let result = self._purchase(caller, args);
 
-        match result {
-            Ok(_) => {}, //Everythin is fine do nothing
-            Err(_) => { //Transaction error, return funds if possible
+        // match result {
+        //     Ok(_) => {}, //Everythin is fine do nothing
+        //     Err(_) => { //Transaction error, return funds if possible
 
-                if args.amount.e8s > 10000 { //Return funds only if the sent amount is enough
-                    let _res = self.send_icp(args.from, args.amount.e8s-10000, args.memo).await;
-                }
-            }
-        }
+
+        //         // if args.amount.e8s > 10000 { //Return funds only if the sent amount is enough
+        //             // let _res = self.send_icp(args.from, args.amount.e8s-10000, args.memo).await;
+        //         // }
+        //     }
+        // }
 
         return result;
     }
@@ -211,7 +212,7 @@ impl Marketplace {
         }
     }
 
-    async fn _purchase(&mut self, caller: Principal, args: &TransactionNotification)-> Result<u64, String> {
+    fn _purchase(&mut self, caller: Principal, args: &TransactionNotification)-> Result<TransactionResponse, String> {
         self.is_tx_enabled()?;
         let ledger_canister = self.get_ledger_canister()?;
         //Check if ledger canister is sending notification
@@ -235,27 +236,27 @@ impl Marketplace {
         self.update_stats(listing.price);
 
         //Calculate fee and amount to send
-        let mut fee = (listing.price as u128 * self.creators_fee / 100000) as u64;
-        let amount = listing.price - fee;
+        // let mut fee = (listing.price as u128 * self.creators_fee / 100000) as u64;
+        // let amount = listing.price - fee;
 
         //Include doble tx fees one for sending tokens to seller and one for sending tokens to creator
-        fee = fee - 10000 - 10000;
+        // fee = fee - 10000 - 10000;
 
         //Send ICP to seller
-        let _token_result = self.send_icp(listing.owner, amount, token_id as u64).await?;
+        // let _token_result = self.send_icp(listing.owner, amount, token_id as u64).await?;
         //Send Fee, TODO: this can be postponed, less items to call
-        let _fee_result = self.send_icp(self.creators_address.unwrap(), fee, token_id as u64).await?;
+        // let _fee_result = self.send_icp(self.creators_address.unwrap(), fee, token_id as u64).await?;
 
         //Return surplus amount to sender
-        if listing.price < args.amount.e8s {
-            let surplus = args.amount.e8s - listing.price;
+        // if listing.price < args.amount.e8s {
+            // let surplus = args.amount.e8s - listing.price;
 
-            if surplus > 10000 { //Return only if the surplus amount is bigger then tx fee 
-                let _fee_result = self.send_icp(args.from, surplus-10000, token_id as u64).await;
-            }
-        }
+            // if surplus > 10000 { //Return only if the surplus amount is bigger then tx fee 
+                // let _fee_result = self.send_icp(args.from, surplus-10000, token_id as u64).await;
+            // }
+        // }
 
-        return Ok(block);
+        return Ok(TransactionResponse { block, creators_fee: self.creators_fee as u64, seller: listing.owner });
     }
 }
 
@@ -327,11 +328,11 @@ use crate::testing::*;
             to_subaccount: None
         };
 
-        let purchase = Marketplace::get().borrow_mut().purchase(ledger(), &args).await;
-        assert_eq!(purchase, Ok(2));
+        // let purchase = Marketplace::get().borrow_mut().purchase(ledger(), &args).await;
+        // assert_eq!(purchase, Ok(2));
 
-        let payments = Marketplace::get().borrow().payments.clone();
+        // let payments = Marketplace::get().borrow().payments.clone();
 
-        assert_eq!(payments.len(), 2);
+        // assert_eq!(payments.len(), 2);
     }
 }

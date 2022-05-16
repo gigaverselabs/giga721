@@ -20,7 +20,60 @@ type SendArgs = record {
 type Result = variant {
   Ok: null;
   Err: text;
-}
+};
+
+type Result_2 = variant {
+  Ok: nat64;
+  Err: text;
+};
+
+type TransferStatus = record {
+  index: nat64;
+  timestamp: nat64;
+  args: SendArgs;
+  result: opt Result_2;
+};
+
+type ErrType = variant {
+  Call;
+  Decode;
+  Resp;
+  Token;
+};
+
+type AppErr = record {
+  id: ErrType;
+  text: text;
+};
+
+type TransactionResponse = record {
+  block: nat64;
+  creators_fee: nat64;
+  seller: principal;
+};
+
+type Result_3 = variant {
+  Ok: TransactionResponse;
+  Err: AppErr;
+};
+
+ type TransactionNotification = 
+ record {
+   amount: ICPTs;
+   block_height: nat64;
+   from: principal;
+   from_subaccount: opt nat8;
+   memo: nat64;
+   to: principal;
+   to_subaccount: opt nat8;
+ };
+
+type NotificationStatus = record {
+  index: nat64;
+  timestamp: nat64;
+  args: TransactionNotification;
+  result: opt Result_3;
+};
 
 service : () -> {
   set_ledger_canister: (principal) -> (bool);
@@ -28,9 +81,14 @@ service : () -> {
 
   get_blocks: () -> (vec SendArgs);
 
+  get_market_fee: () -> (nat64);
+
   notify: (nat64, opt nat8) -> (Result);
   send_dfx: (SendArgs) -> (nat64);
 
   count_processed: () -> (nat64);
   get_processed: () -> (vec nat64);
+
+  get_payments: () -> (vec TransferStatus);
+  get_notifications: () -> (vec NotificationStatus);
 }
